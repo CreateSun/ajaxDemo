@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>AJAX</title>
+</head>
+<body>
+	<h2>发送ajax请求</h2>
+	<button onclick="instead('local')">本地请求</button>
+	<button onclick="instead('cloud')">云端请求</button><br>
+	当前环境
+	<strong id="recent">云端</strong>
+	<p id="test"></p>
+	<hr>
+	<details>
+		<summary>
+			这是一个基于原生JS以及Fetch方法的网络ajax请求demo，帮助大家理解网络请求的一般步骤
+		</summary>
+		<p>demo比较简单，实际项目中要处理更为复杂的页面逻辑</p>
+		<p>所以这个demo只关注数据交换部分</p>
+		<p>后台是java开发，JS后台与java其实大同小异，相关源码以及打包的jar包我也放在了仓库中默认port是8080</p>
+		<p>有兴趣的同学并且有本地java环境以及idea的同学可以可以将java后台的代码也下载下来</p>
+		<p>如果没有相关基础的同学还是换成云端环境就好，我把他放在了服务器上，可以直接通过云端访问</p>
+	</details>
+	<hr>
+
+	<!-- 这部分为发送get请求 -->
+	<h3>GET请求</h3>
+	<label for="get">输入你想访问的地址</label>
+	<input id="get" type="text" value="Hello World">
+	<button onclick="get()">GET数据</button>
+	<strong id="get-plain"></strong>
+
+	<hr>
+	<!-- 这部分为发送post请求 -->
+	<h3>POST请求</h3>
+	<input id="username" type="text" value="1819840437@qq.com">
+	<input id="password" type="password" value="123456">
+	<button id="POST" onclick="post()">POST请求</button>
+	<strong id="post-plain"></strong>
+</body>
+<script>
+	const $ = (item) => document.getElementById(item); // 把获取元素的方法简化一下
+	let base_url = "http://yaoyao.ren:8080";
+
+	instead = (arg) => {
+		if (arg === "local") {
+			$("recent").innerHTML = "本地";
+			base_url = "http://localhost:8080"
+		} else {
+			$("recent").innerHTML = "云端";
+			base_url = "http://yaoyao.ren:8080";
+		}
+	}
+
+
+	get = () => {
+		// fetch方法与
+		// Jquery中的$.ajax、
+		// Vue中封装的axios、
+		// 原生中的XMLhttpRequest，
+		// 其实都是一个性质的，都是能够发送网络数据请求的方法，
+		// 使用方法除了原生的XMLhttpRequset以外其他都大同小异，
+		// 并且使用起来也可以根据自己的需求来进行二次封装
+
+		// 这里就是一个普通的fetch函数
+		// fetch介绍 https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
+		fetch(`${base_url}/${$("get").value}`) 
+		// fetch方法接收两个参数，url, params。 params为对象，其中可以设定请求的类型，如果没有指定则默认为get方法
+		// 至于下方的.then()是什么，相信大家在自己学习请求的时候也见到过类似的结构，这是js的ES6版本中新增的Promise方法中的特殊方法，详细情况大家可以参考https://www.liaoxuefeng.com/wiki/1022910821149312/1023024413276544
+		// 或者 https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
+  			.then((response) => {
+    			return response.text();
+  			})
+  			.then((data) => {
+  				$("get-plain").innerHTML = data 
+  				// 拿到数据以后在页面中显示出来
+  			})
+  			.catch(err => console.info(err))
+  			// catch方法用于捕获请求中的异常
+		}
+
+	post = () => {
+		let body = {
+			username: $("username").value,
+			password: $("password").value
+		}
+		// 这里使用封装好的一个postData方法，所谓封装就是将一些常用的配置向放在一起组成函数
+		// 把需要改动的部分作为函数参数暴露出来
+		postData(base_url+"/ajax/post", body)
+		.then(res => $("post-plain").innerHTML = "用户名"+res.username+", 密码"+res.password)
+	}
+
+
+	// 一个封装的post例子 这个例子在MDN的fetch简介中也可以找到
+	async function postData(url = '', data = {}) {
+
+  	const response = await fetch(url, {
+    	method: 'POST', // *GET, POST, PUT, DELETE, etc.
+    	mode: 'cors', // no-cors, *cors, same-origin
+    	cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+    	credentials: 'same-origin', // include, *same-origin, omit
+    	headers: {
+      		'Content-Type': 'application/json' //默认发送的是json格式的数据
+    	},
+    	redirect: 'follow', // manual, *follow, error
+    	referrerPolicy: 'no-referrer', // no-referrer, *client
+    	body: JSON.stringify(data) // body data type must match "Content-Type" header
+  	});
+  	if (response.status === 200) return await response.json(); 
+  	console.log("请求错误"+response.data)  // 如果请求的中的返回值中的状态码是200则把
+}
+
+</script>
+</html>
